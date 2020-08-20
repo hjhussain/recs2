@@ -1,0 +1,17 @@
+target/
+metastore_db/
+metastore/
+*.class
+*.iml
+*.ipr
+*.iws
+.DS_Store
+derby.log
+
+## Directory-based project format:
+.idea/
+# IntelliJ
+/out/
+
+# mpeltonen/sbt-idea plugin
+.idea_modules/
