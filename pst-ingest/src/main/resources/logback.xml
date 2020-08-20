@@ -1,0 +1,15 @@
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="uk.co.argos.pap" level="${APP_LOG_LEVEL}" />
+    <logger name="akka" level="INFO"/>
+
+    <variable name="APP_LOG_LEVEL" value="${APP_LOG_LEVEL:-INFO}" />
+    <root level="${APP_LOG_LEVEL}">
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>

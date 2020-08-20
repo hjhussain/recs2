@@ -1,0 +1,114 @@
+@Library(['global-pipeline-shared-libs@0.1.3', 'pap-jenkins-pipeline-shared-libs@0.0.13']) _
+
+pipeline {
+    agent { label 'ec2' }
+    environment {
+        SERVICE_NAME = 'pst-ingest'
+        ENABLE_NOTIFICATION = true
+        BUILD_TIMESTAMP = generalHelper.getCurrentTimestamp()
+        DOCKER_TAG = dockerHelper.tagGradle()
+    }
+    stages {
+        stage('Prepare build environment') {
+            steps {
+                script {
+                    dockerHelper.startBuildEnvironment('sbt')
+                }
+            }
+        }
+
+        stage('Build and run unit tests') {
+
+            steps {
+                script {
+//                   dockerHelper.runInBuildEnvironment('./gradlew clean checkScoverage shadowJar -Dorg.gradle.jvmargs="-Xms256m -Xmx767m" --no-daemon')
+                   dockerHelper.runInBuildEnvironment('sbt clean assembly')
+                }
+            }
+//            post {
+//                always {
+//                    junit 'build/test-results/testScoverage/*.xml'
+//                }
+//            }
+        }
+
+        stage('Build and push Docker image') {
+            steps {
+                script {
+                    dockerHelper.build(DOCKER_TAG, SERVICE_NAME)
+                }
+            }
+        }
+
+        stage('Deploy') {
+            when { anyOf { branch 'dev'; branch 'release'; branch 'integration'; branch 'master' } }
+            steps {
+                script {
+                    if (BRANCH_NAME == 'dev') {
+                        ENVIRONMENT = 'dev'
+                        SERVICE_SPECIFIER = ''
+                        instances = 1
+                        APP_LOG_LEVEL = 'TRACE'
+                        AKKA_LOG_LEVEL = 'INFO'
+                        APP_ROLE_NAME = 'pap/promotions/pst-ingest'
+                    }
+                    else if (BRANCH_NAME == 'release') {
+                        ENVIRONMENT = 'staging'
+                        SERVICE_SPECIFIER = ''
+                        instances = 1
+                        APP_LOG_LEVEL = 'WARN'
+                        AKKA_LOG_LEVEL = 'WARNING'
+                        APP_ROLE_NAME = 'pap/promotions/pst-ingest'
+                    }
+                     else if (BRANCH_NAME == 'integration') {
+                        ENVIRONMENT = 'staging'
+                        SERVICE_SPECIFIER = '-integration'
+                        instances = 1
+                        APP_LOG_LEVEL = 'WARN'
+                        AKKA_LOG_LEVEL = 'WARNING'
+                        APP_ROLE_NAME = 'pap/promotions/pst-ingest'
+                    }
+                    else if (BRANCH_NAME == 'master') {
+                        ENVIRONMENT = 'production'
+                        SERVICE_SPECIFIER = ''
+                        instances = 1
+                        APP_LOG_LEVEL = 'WARN'
+                        AKKA_LOG_LEVEL = 'WARNING'
+                        APP_ROLE_NAME = 'pap/promotions/pst-ingest'
+                    }
+
+                    marathonHelper.deployApp(
+                            "${ENVIRONMENT}",
+                            'aws',
+                            dockerImage: "docker.deveng.systems/pap/${SERVICE_NAME}:${DOCKER_TAG}",
+                            marathonFile: "marathon.json",
+                            instances: instances,
+                            envVars: [
+                                    'ENV'                        : "${ENVIRONMENT}",
+                                    'APP_LOG_LEVEL'              : "${APP_LOG_LEVEL}",
+                                    'AKKA_LOG_LEVEL'             : "${AKKA_LOG_LEVEL}",
+                                    'ORCHESTRATION_SERVICE_HOST' : "http://promotions-event-orchestrator${SERVICE_SPECIFIER}.service.eu-west-1.${ENVIRONMENT}.deveng.systems",
+                                    'PROMOTION_SERVICE_HOST'     : "http://promotions-engine-write${SERVICE_SPECIFIER}.service.eu-west-1.${ENVIRONMENT}.deveng.systems",
+                                    'APP_ROLE_NAME'              : "${APP_ROLE_NAME}"
+                            ]
+                    )
+
+                    if (ENABLE_NOTIFICATION) {
+                        slackNotification(currentBuild.result, '#pap-ci-integration', "INFO: Deployed new version of ${SERVICE_NAME} from branch ${BRANCH_NAME}")
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+             script{
+                 cleanWs()
+                 dockerHelper.stopBuildEnvironment()
+                 if (ENABLE_NOTIFICATION) {
+                     slackNotification(currentBuild.result, '#pap-ci-integration', "Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.RUN_DISPLAY_URL})")
+                 }
+             }
+        }
+    }
+}

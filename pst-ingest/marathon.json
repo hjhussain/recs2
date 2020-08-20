@@ -1,0 +1,41 @@
+{
+  "id": "pap/promotions/pst-ingest",
+  "cpus": 0.1,
+  "mem": 1024,
+  "disk": 0,
+  "instances": 1,
+  "container": {
+    "type": "DOCKER",
+    "volumes": [],
+    "docker": {
+      "network": "BRIDGE",
+      "forcePullImage": false
+    }
+  },
+  "env": {},
+  "labels": {
+    "SERVICE_NAME": "pst-ingest",
+    "SERVICE_ZONE": "private",
+    "TEAM_NAME": "pap"
+  },
+  "healthChecks": [
+    {
+      "path": "/health",
+      "portIndex": 0,
+      "protocol": "MESOS_HTTP",
+      "gracePeriodSeconds": 60,
+      "intervalSeconds": 15,
+      "timeoutSeconds": 20,
+      "maxConsecutiveFailures": 3
+    }
+  ],
+  "portDefinitions": [
+    {
+      "name": "pst-ingest",
+      "labels": {
+        "containerPort": "8080",
+        "loadbalancerPort": "80"
+      }
+    }
+  ]
+}

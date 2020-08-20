@@ -1,0 +1,26 @@
+version: '3.0'
+
+services:
+  metrics:
+    container_name: metrics
+    image: kamon/grafana_graphite
+    ports:
+      - "8125:8125"
+      - "8126:8126"
+      - "2003:2003"
+      - "8090:80"
+      - "8091:81"
+  pst-ingest:
+    container_name: pst-ingest
+    image: pst-ingest:latest
+    hostname: pst-ingest-host
+    depends_on:
+      - metrics
+    env_file:
+      - .env
+    ports:
+      - "18080:8080"
+#    volumes:
+#      - /Users/hussaihu/projects/pricing/pst-ingest/src/test/resources/promotions:/promotions
+
+

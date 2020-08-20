@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Export Batch="09090900" StartDate="09/09/2020" StartTime="09:00">
+    <Header>
+        <Format>Argos</Format>
+        <Profile Name="Web-PromotionSet.xml"/>
+        <RecipientCompany></RecipientCompany>
+        <RecipientCountry></RecipientCountry>
+        <RecipientChannelType></RecipientChannelType>
+        <RecipientChannelSystem></RecipientChannelSystem>
+    </Header>
+</Export>
