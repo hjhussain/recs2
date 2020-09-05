@@ -1,0 +1,10 @@
+{
+  "blobAccountName": "asosrecsbatchprod",
+  "blobAccountKey": "Mya0556qP3pA/NuAnAHzNawbxc4506R6CKOksY687Fn1qrvNX1i1DKlofjcrrdRDsW7Sv93ZTYozqotpvYJubw==",
+  "cosmosDbHost": "https://asds-brandrecsaml-db-dev.documents.azure.com:443/",
+  "cosmosDbMasterKey": "aaTI5okPbzvnpyD411kbHXy6Yps78uNo3xAJdjd4wFIcL2uWd6DRl67Qz4go2EA8V8NLqMsYRrtMxyNfCjgacA==",
+  "topProducts": 100,
+  "topBrands": 20
+}
+
+
